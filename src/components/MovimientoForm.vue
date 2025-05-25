@@ -46,7 +46,7 @@ function manejarSubmit() {
     <input v-model="descripcion" type="text" placeholder="Descripción" />
     <input v-model="monto" type="number" placeholder="Monto" />
     <button type="submit">
-      {{ props.modoEdicion ? 'Actualizar' : 'Agregar' }} Movimiento
+      {{ props.modoEdicion ? 'Actualizar' : 'Agregar' }} <br/> Movimiento
     </button>
   </form>
 </template>

@@ -2,6 +2,9 @@
 import MovimientoForm from './components/MovimientoForm.vue'
 import { useMovimientos } from './composables/useMovimientos.js'
 
+import PagoForm from './components/PagoForm.vue'
+import { usePagos } from './composables/usePagos.js'
+
 // Composable que encapsula la lógica
 const {
   movimientos,
@@ -11,6 +14,16 @@ const {
   eliminarMovimiento,
   editarMovimiento
 } = useMovimientos()
+
+const {
+  pagos, 
+  agregarPago,
+  eliminarPago,
+  editarPago,
+  pagoActual,
+  modoEdicionPago
+} = usePagos()
+
 </script>
 
 <template>
@@ -23,6 +36,7 @@ const {
       @nuevo-movimiento="agregarMovimiento"
     />
 
+
     <ul>
       <li v-for="m in movimientos" :key="m.id">
         {{ m.descripcion }} - ${{ m.monto }}
@@ -30,12 +44,28 @@ const {
         <button @click="eliminarMovimiento(m.id)">Eliminar</button>
       </li>
     </ul>
+
+    <h2>pagos Mensuales Recurrentes</h2>
+    <pagoForm 
+      :editar = "pagoActual"
+      :modo-edicion = "modoEdicionPago"
+      @nuevo-pago="agregarPago"
+    />
+
+    <ul>
+      <li v-for="p in pagos" :key="p.id">
+        {{ p.descripcion }} - ${{ p.monto }} (cada {{ p.diaDePago }} de cada mes)
+        <button @click="editarPago(p)">Editar</button>
+        <button @click="eliminarPago(p.id)">Eliminar</button>
+      </li>
+    </ul>
+  
   </main>
 </template>
 
 <style scoped>
 main {
-  max-width: 600px;
+  max-width: 700px;
   margin: auto;
   padding: 1rem;
   font-family: Arial, sans-serif;
@@ -43,7 +73,12 @@ main {
 
 h1 {
   text-align: center;
-  color: #333;
+  color: #727272;
+}
+h2 {
+  text-align: center;
+  font-size: 2rem;
+  color: #5c5c5c;
 }
 
 ul {
@@ -55,7 +90,7 @@ li {
   background: #5b5b5b;
   margin-bottom: 0.5rem;
   padding: 0.75rem;
-  border-radius: 8px;
+  border-radius: 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
