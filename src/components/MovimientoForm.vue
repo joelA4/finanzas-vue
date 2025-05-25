@@ -1,76 +1,64 @@
-<template>
-    <form @submit.prevent='agregarMovimiento'>
-        <input v-model="descripcion" type="text" placeholder="Description" required />
-        <input v-model.number="monto" type="number" placeholder="Monto" required />
-        <select v-model="tipo">
-            <option value="ingreso">Ingreso</option>
-            <option value="gasto">Gasto</option>
-        </select>
-        <button type="submit">Agregar</button>
-    </form>
-</template>
-
 <script setup>
 import { ref, watch } from 'vue'
+import { nanoid } from 'nanoid'
 
-// Variables del formulario
-const descripcion = ref('')
-const monto = ref(0)
-const tipo = ref('ingreso')
-
-// Evento al enviar el formulario
-const emit = defineEmits(['nuevo-movimiento']);
-
-//aceptar props
 const props = defineProps({
-    editar: Object,
-    modoEdicion: Boolean
+  editar: Object,
+  modoEdicion: Boolean
 })
 
-function agregarMovimiento() {
-    if (!descripcion.value || monto.value === 0) {
-        return
-    }
-    
-    const nuevo = {
-        id: Date.now(),
-        descripcion: descripcion.value,
-        monto: tipo.value === 'gasto' ? -Math.abs(monto.value) : Math.abs(monto.value),
-        tipo: tipo.value
-    }
+const emit = defineEmits(['nuevo-movimiento'])
 
-    emit('nuevo-movimiento', nuevo)
+const descripcion = ref('')
+const monto = ref('')
 
-    // Limpiar el formulario
-    descripcion.value = ''
-    monto.value = 0
-    tipo.value = 'ingreso'
+// Si estamos editando, llenar los campos automáticamente
+watch(
+  () => props.editar,
+  (nuevo) => {
+    if (props.modoEdicion && nuevo) {
+      descripcion.value = nuevo.descripcion
+      monto.value = nuevo.monto
+    }
+  },
+  { immediate: true }
+)
+
+function manejarSubmit() {
+  if (!descripcion.value || !monto.value) return
+
+  const movimiento = {
+    id: props.modoEdicion && props.editar ? props.editar.id : nanoid(),
+    descripcion: descripcion.value,
+    monto: parseFloat(monto.value)
+  }
+
+  emit('nuevo-movimiento', movimiento)
+
+  // Limpiar campos
+  descripcion.value = ''
+  monto.value = ''
 }
-function enviarMovimiento() {
-    if (!descripcion.value || monto.value <= 0)return
-
-    emit('nuevo-movimiento', {
-        id: props.editar?.id ?? Date.now(),
-        descripcion: descripcion.value,
-        monto: monto.value,
-        tipo: tipo.value
-    })
-
-    // Reiniciar formulario
-    descripcion.value = ''
-    monto.value = 0
-    tipo.value = 'ingreso'
-}
-
-//llena los datos cuando haya datos a editar
-watch(() => props.editar, (nuevo) => {
-      console.log("Cargando datos en el formulario:", nuevo)
-
-    if (nuevo) {
-        descripcion.value = nuevo.descripcion
-        monto.value = Math.abs(nuevo.monto)
-        tipo.value = nuevo.tipo
-    }
-})
-
 </script>
+
+<template>
+  <form @submit.prevent="manejarSubmit">
+    <input v-model="descripcion" type="text" placeholder="Descripción" />
+    <input v-model="monto" type="number" placeholder="Monto" />
+    <button type="submit">
+      {{ props.modoEdicion ? 'Actualizar' : 'Agregar' }} Movimiento
+    </button>
+  </form>
+</template>
+
+<style scoped>
+form {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+input, button {
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+</style>
