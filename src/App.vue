@@ -5,6 +5,8 @@ import { useMovimientos } from './composables/useMovimientos.js'
 import PagoForm from './components/PagoForm.vue'
 import { usePagos } from './composables/usePagos.js'
 
+import RegistroUsuario from './components/RegistroUsuario.vue'
+
 // Composable que encapsula la lógica
 const {
   movimientos,
@@ -59,7 +61,7 @@ const {
         <button @click="eliminarPago(p.id)">Eliminar</button>
       </li>
     </ul>
-  
+    <RegistroUsuario />
   </main>
 </template>
 
