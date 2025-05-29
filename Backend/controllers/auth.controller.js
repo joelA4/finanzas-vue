@@ -36,7 +36,7 @@ export const login = async (req, res) => {
 
     try {
         const result = await pool.query(
-            'SELECT * FROM usuarios WHERE (email = $1 OR username = $1) AND password = $2', 
+            'SELECT * FROM usuarios WHERE (email = $1 OR nombreusuario = $1) AND password = $2', 
             [identificador, password]
         )
         if (result.rows.length == 0 ){
@@ -45,11 +45,11 @@ export const login = async (req, res) => {
 
         //Devolver lo necesario
         const usuario = result.rows[0]
-        req.json({
+        res.json({
             id: usuario.id,
             mombre: usuario.nombre,
             email: usuario.email,
-            username: usuario.username
+            nombreusuario: usuario.nombreusuario
         })
 
     } catch (error) {

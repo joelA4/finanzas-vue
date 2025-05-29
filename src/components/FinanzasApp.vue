@@ -1,9 +1,9 @@
 <script setup>
-import MovimientoForm from './components/MovimientoForm.vue'
-import { useMovimientos } from './composables/useMovimientos.js'
+import MovimientoForm from './MovimientoForm.vue'
+import { useMovimientos } from '../composables/useMovimientos.js'
 
-import PagoForm from './components/PagoForm.vue'
-import { usePagos } from './composables/usePagos.js'
+import PagoForm from './PagoForm.vue'
+import { usePagos } from '../composables/usePagos.js'
 
 // Composable que encapsula la lógica
 const {

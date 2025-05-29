@@ -10,11 +10,14 @@ if (localStorage.getItem('usuario')){
   usuario.value = JSON.parse(localStorage.getItem('usuario'))
 }
 
+function handleLoginExitoso(user) {
+  usuario.value = user
+}
 </script>
 
 <template>
   <div v-if="!usuario">
-    <LoginUsuario />
+    <LoginUsuario @login-exitoso="handleLoginExitoso" />
     <RegistroUsuario />
   </div>
 

@@ -1,10 +1,11 @@
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import axios from 'axios';
 export function useMovimientos() {
     const movimientos = ref([])
     const modoEdicion = ref(false)
     const movimientoActual = ref(null)
     const usuario = JSON.parse(localStorage.getItem('usuario'))
+    const API = 'http://localhost:3000/api/movimientos';
 
     const agregarMovimiento = async (nuevo) => {
         const usuario = JSON.parse(localStorage.getItem('usuario0'))
@@ -34,21 +35,56 @@ export function useMovimientos() {
             }
         }
     }
-
-    const eliminarMovimiento = (id) => {
-        movimientos.value = movimientos.value.filter(m => m.id !== id)
+    
+    const editarMovimiento = async (mov) => {
+        try {
+            await axios.put(`%{API}/${mov.id}`, mov)
+            await cargarMovimientos();
+        } catch (error) {
+            console.error("Error al editar movimiento", error);
+        }
     }
-    const editarMovimiento = (mov) => {
-        movimientoActual.value = { ...mov }
-        modoEdicion.value = true
+
+    const eliminarMovimiento =  async (id) => {
+        try {
+            await axios.delete(`${API}/$mov.id`);
+            await cargarMovimientos(); // Vuelve a cargar desde el backend
+        } catch (error) {
+            console.error("Error al eliminar movimiento", error);
+        }
     }
 
+    const cargarMovimientos = async () => {
+        try {
+            const res = await axios.get(API)
+            movimientos.value = res.data
+        } catch (error) {
+            console.error("Error al cagar movimientos:", error)
+        }
+    }
+
+    const actualizarMovimiento = async (movimiento) => {
+        try {
+            await axios.put(`${API}/${movimientoEditado.id}`, movimientoEditado)
+            modoEdicion.value = false
+            movimientoActual.value = null
+            await cargarMovimientos()
+        } catch (error) {
+            console.error("Error al actualizar movimiento: ", error)
+        }
+    }
+
+    // llamar autamicamente al montar
+    onMounted(() => {
+        cargarMovimientos()
+    })
     return {
         movimientos,
         modoEdicion,
         movimientoActual,
         agregarMovimiento,
         eliminarMovimiento,
-        editarMovimiento
+        editarMovimiento,
+        actualizarMovimiento
     }
 }

@@ -7,17 +7,20 @@
     const mensaje = ref('')
     const exito = ref('')
 
+    const emit = defineEmits(['login-exitoso'])
+
     const loginUsuario = async () => {
         try {
             const res = await axios.post('http://localhost:3000/api/auth/login', {
-                nombreusuario: nombreusuario.value,
+                identificador: nombreusuario.value, // Cambia aquí
                 password: password.value
             })
 
             //Guardar el usuario o token en localstorage
             localStorage.setItem('usuario', JSON.stringify(res.data))
-            exito.value = value
+            exito.value = true
             mensaje.value = "Inicio de sesion exitoso!"
+            emit('login-exitoso', res.data)
         } catch (error) {
             mensaje.value = error.response?.data?.mensaje || 'Error al iniciar sesion'
             exito.value = false
