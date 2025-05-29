@@ -3,7 +3,8 @@ import { pool } from '../config/db.js'
 // Obtener todos los movimientos
 export const obtenerMovimientos = async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM movimientos ORDER BY fecha DESC')
+        const result = await pool.query(`SELECT * FROM movimientos WHERE usuario_id = $1 ORDER BY fecha DESC`)
+        [usuario_id]
         res.json(result.rows)
     } catch (error) {
         console.error(error)
@@ -29,8 +30,7 @@ export const crearMovimiento = async (req, res) => {
             'INSERT INTO movimientos (descripcion, monto, categoria_id, fecha, tipo, usuario_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', 
             [descripcion, monto, categoria_id, fecha, tipo, usuario_id]
         )
-
-        res.status(201).json(result.rows[0])
+        res.json(crearMovimiento.rows[0])
     } catch (error) {
         console.error(error)
         res.status(500).json({ mensaje: 'Error al crear movimiento' })
