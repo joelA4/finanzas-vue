@@ -2,12 +2,23 @@ import { pool } from '../config/db.js'
 
 // Obtener todos los movimientos
 export const obtenerMovimientos = async (req, res) => {
-    const { id } = req.params;
+    const { usuario_id } = req.params;
     try {
-        const result = await pool.query(`SELECT * FROM movimientos WHERE id = $1`)
-        [id]
-    if (result.rows.length === 0) return res.status(404).json({ mensaje: 'movimiento no encontrado'});
-        res.json(result.rows)
+        const result = await pool.query(`
+            SELECT 
+            movimientos.id,
+            movimientos.descripcion,
+            movimientos.tipo,
+            movimientos.fecha,
+            movimientos.categoria_id,
+            movimientos.nombre AS categoria_nombre
+            FROM movimientos
+            LEFT JOIN categorias ON movimmientos.categoria_id = categorias.id
+            WHERE movimientos.usuario.id = $1
+            ORDER BY movimientos.fecha DESC
+            `, [usuario_id])
+
+            res.json(result.rows);
     } catch (error) {
         console.error(error)
         res.status(500).json({
@@ -38,6 +49,7 @@ export const crearMovimiento = async (req, res) => {
     const {
         descripcion,
         monto,
+        usuario_id,
         categoria_id,
         fecha,
         tipo
@@ -45,8 +57,8 @@ export const crearMovimiento = async (req, res) => {
 
     try {
         const result =await pool.query(
-            'INSERT INTO movimientos (descripcion, monto, categoria_id, fecha, tipo, usuario_id) VALUES ($1, $2, $3, $4, $5) RETURNING *', 
-            [descripcion, monto, categoria_id, fecha, tipo]
+            'INSERT INTO movimientos (descripcion, monto, fecha, tipo, usuario_id, categoria_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', 
+            [descripcion, monto, fecha, tipo, usuario_id, categoria_id]
         )
         res.status(201).json(crearMovimiento.rows[0])
     } catch (error) {

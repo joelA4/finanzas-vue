@@ -5,6 +5,29 @@ import { useMovimientos } from '../composables/useMovimientos.js'
 import PagoForm from './PagoForm.vue'
 import { usePagos } from '../composables/usePagos.js'
 
+import categorias from './categorias.vue'
+
+//Seccion de categorias 
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+
+const categoriasLista = ref([])
+
+const obtenerCategorias = async () => {
+  try {
+    const res = await axios.get('http://localhost:3000/api/categorias', { headers: {Authorization: `Bearer {$localStorage.getItem('token')}`
+    }
+  })
+  categoriasLista.value = res.data
+  } catch (error) {
+    console.error('Error al cargar categorias: ', error)
+  }
+}
+
+onMounted(() =>{
+  obtenerCategorias()
+})
+
 // Composable que encapsula la lógica
 const {
     movimientos,
@@ -39,17 +62,30 @@ const cerrarSesion = () => {
     <MovimientoForm
       :editar="movimientoActual"
       :modo-edicion="modoEdicion"
+      :categorias="categoriasLista"
       @nuevo-movimiento="agregarMovimiento"
+      @movimiento-actualizado="actualizarMovimiento"
     />
 
 
     <ul>
       <li v-for="m in movimientos" :key="m.id">
-        {{ m.descripcion }} - ${{ m.monto }}
+        <strong>{{ m.descripcion }}</strong> -${{ m.monto }}
+        <br />
+        <small>
+          {{ m.tipo ? 'Ingreso' : 'Gasto' }} |
+          Categoria: {{ m.categoria_nombre || 'sin categoria' }} |
+          Fecha: {{ new Date(m.fecha).toDateString() }}
+        </small>
+        <br />
+        
         <button @click="editarMovimiento(m)">Editar</button>
         <button @click="eliminarMovimiento(m.id)">Eliminar</button>
       </li>
     </ul>
+
+    <!--Seccion de Categorias-->
+    <categorias />
 
     <h2>pagos Mensuales Recurrentes</h2>
     <pagoForm 
