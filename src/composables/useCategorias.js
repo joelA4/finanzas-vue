@@ -4,7 +4,7 @@ import axios from 'axios'
 export function useCategorias(){
     const categorias = ref([])
     const nuevaCategoria = ref ('')
-    const API = 'http://localhost:3000/aoi/categorias'
+    const API = 'http://localhost:3000/api/categorias'
 
     const headers = () => ({
         Authorization: `Bearer ${localStorage.getItem('token')}`

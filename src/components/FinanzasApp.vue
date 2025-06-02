@@ -15,10 +15,12 @@ const categoriasLista = ref([])
 
 const obtenerCategorias = async () => {
   try {
-    const res = await axios.get('http://localhost:3000/api/categorias', { headers: {Authorization: `Bearer {$localStorage.getItem('token')}`
-    }
-  })
-  categoriasLista.value = res.data
+    const res = await axios.get('http://localhost:3000/api/categorias', { 
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    categoriasLista.value = res.data
   } catch (error) {
     console.error('Error al cargar categorias: ', error)
   }
