@@ -1,4 +1,4 @@
-import pool from '../config/db.js'
+import  { pool } from '../config/db.js'
 
 export const obtenerCategorias = async (usuario_id) => {
     const result = await pool.query(

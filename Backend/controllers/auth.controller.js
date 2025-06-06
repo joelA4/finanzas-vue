@@ -1,4 +1,5 @@
 import { pool } from '../config/db.js'
+import jwt from 'jsonwebtoken'
 
 //registro de usuarios
 export const registrar = async (req, res) => {
@@ -22,7 +23,20 @@ export const registrar = async (req, res) => {
             [nombre, email, nombreusuario, password ]
         )
 
-        res.status(201).json(nuevo.rows[0])
+        // Generar token para el usuario nuevo
+        const token = jwt.sign(
+            { 
+                id: nuevo.rows[0].id,
+                nombreusuario: nuevo.rows[0].nombreusuario 
+            },
+            process.env.JWT_SECRET || 'secreto',
+            { expiresIn: '24h' }
+        )
+
+        res.status(201).json({
+            usuario: nuevo.rows[0],
+            token
+        })
         
     } catch (error) {
         console.error(error)
@@ -39,21 +53,35 @@ export const login = async (req, res) => {
             'SELECT * FROM usuarios WHERE (email = $1 OR nombreusuario = $1) AND password = $2', 
             [identificador, password]
         )
-        if (result.rows.length == 0 ){
+        if (result.rows.length === 0){
             return res.status(401).json({ mensaje: 'Credenciales incorrectas' })
         }
 
-        //Devolver lo necesario
         const usuario = result.rows[0]
+        
+        // Generar token JWT
+        const token = jwt.sign(
+            { 
+                id: usuario.id,
+                nombreusuario: usuario.nombreusuario 
+            },
+            process.env.JWT_SECRET || 'secreto',
+            { expiresIn: '24h' }
+        )
+
+        // Devolver usuario y token
         res.json({
-            id: usuario.id,
-            mombre: usuario.nombre,
-            email: usuario.email,
-            nombreusuario: usuario.nombreusuario
+            token,
+            usuario: {
+                id: usuario.id,
+                nombre: usuario.nombre,
+                email: usuario.email,
+                nombreusuario: usuario.nombreusuario
+            }
         })
 
     } catch (error) {
-        console.error(error)
-        res.status(500).json({ mensaje: 'Error al iniciar sesion' })
+        console.error('Error en login:', error)
+        res.status(500).json({ mensaje: 'Error al iniciar sesión' })
     }
 } 

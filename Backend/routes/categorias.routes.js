@@ -1,6 +1,6 @@
 import express from "express";
-import { getCategorias, postCategoria } from "../controllers/categorias.controller";
-import { autenticar } from '../middlewares/auth.js'
+import { getCategorias, postCategoria } from "../controllers/categorias.controller.js";
+import { autenticar } from '../middleawares/auth.js'
 
 const router = express.Router()
 
