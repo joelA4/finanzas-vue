@@ -1,14 +1,23 @@
 import express from 'express'
 import {
     obtenerMovimientos,
+    validarMovimientos,
     crearMovimiento,
+    actualizarMovimiento,
     eliminarMovimiento
 } from '../controllers/movimientos.controller.js'
+import { autenticar } from '../middleawares/auth.js';
 
 const router = express.Router()
-router.get('/prueba', (req, res)=>{ res.json({ mensaje: 'Ruta de prueba OK'});});
-router.get('/:id', obtenerMovimientos)
-router.post('/:id', crearMovimiento)
+
+// Todas las rutas requieren autenticacion
+router.use(autenticar)
+
+// Rutas de movimiento
+//router.get('/prueba', (req, res)=>{ res.json({ mensaje: 'Ruta de prueba OK'});});
+router.get('/', obtenerMovimientos)
+router.post('/', crearMovimiento)
+router.post('/:id', actualizarMovimiento)
 router.delete('/:id', eliminarMovimiento)
 
 export default router
