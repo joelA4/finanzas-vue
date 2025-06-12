@@ -1,10 +1,20 @@
 import express from "express";
-import { getCategorias, postCategoria } from "../controllers/categorias.controller.js";
+import { 
+    getCategorias,
+    postCategoria,
+    updateCategoria,
+    deleteCategoria 
+    } from "../controllers/categorias.controller.js";
 import { autenticar } from '../middleawares/auth.js'
 
 const router = express.Router()
+// Todas las rutas requieren autenticacion
+router.use(autenticar)
 
-router.get('/', autenticar, getCategorias)
-router.post('/', autenticar, postCategoria)
+// Rutas de categoria
+router.get('/', getCategorias)
+router.post('/', postCategoria)
+router.put('/', updateCategoria)
+router.delete('/', deleteCategoria)
 
 export default router
