@@ -1,65 +1,62 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue'
-import categorias from './categorias.vue'
+import { ref, watch, onMounted, computed} from 'vue'
+import { useMovimientos } from '../composables/useMovimientos'
 import axios from 'axios'
 
-const emit = defineEmits(['nuevo-movimiento'])
+const emit = defineEmits(['nuevo-movimiento', 'movimiento-actualizado'])
 
 const descripcion = ref('')
 const monto = ref('')
 const tipo = ref(true) // true = ingreso and false - gasto/egreso
 const categoria_id = ref('')
+const fecha = ref(new Date().toISOString().split('T')[0])
 
 const props = defineProps({
   editar: Object,
   modoEdicion: Boolean,
-  categorias: Array
+  categorias: {
+    type: Array,
+    default: () => []
+  }
 })
 
-// validacion de campos
+// estados del formulario
 const errores = ref({
   descripcion: '',
   monto: '',
-  categoria_id: ''
+  categoria_id: '',
+  fecha: ''
 })
 
 const isLoading = ref(false)
 const formSubmitted = ref(false)
 
-// const categorias = ref([])
+const formValido = computed(() => {
+  return !Object.values(errores.value).some(error => error !== '') && 
+  descripcion.value &&
+  monto.value &&
+  categoria_id.value && 
+  fecha.value
+})
 
-// Si estamos editando, llenar los campos automáticamente
+// Llenar el formulario si estamos editando
 watch(() => props.editar, (nuevo) => {
     if (props.modoEdicion && nuevo) {
       descripcion.value = nuevo.descripcion
       monto.value = nuevo.monto
       tipo.value = nuevo.tipo
-      id.value = nuevo.id
       categoria_id.value = nuevo.categoria_id || ''
+      fecha.value = nuevo.fecha.split('T')[0]
     }
-  }, { immediate: true }
-)
+  }, { immediate: true })
 
-//validacion de campos
-watch(descripcion, (nuevoValor) => {
-  if (formSubmitted.value) {
-    validarDescripcion(nuevoValor)
-  }
-})
+//validacion en tiempo real
+watch(descripcion, (nuevoValor) =>  validarDescripcion(nuevoValor))
+watch(monto, (nuevoValor) => validarMonto(nuevoValor))
+watch(categoria_id, (nuevoValor) =>validarCategoria(nuevoValor))
+watch(fecha, (nuevoValor) => vaidarFecha(nuevoValor))
 
-watch(monto, (nuevoValor) => {
-  if (formSubmitted.value) {
-    validarMonto(nuevoValor)
-  }
-})
-
-watch(categoria_id, (nuevoValor) => {
-  if (formSubmitted.value) {
-    validarCategoria(nuevoValor)
-  }
-})
-
-//funciones de validacion
+// Funciones de validacion
 function validarDescripcion(valor) {
   if (!valor.trim()) {
     errores.value.descripcion = 'La descripcion es obligatoria'
@@ -92,6 +89,20 @@ function validarCategoria(valor) {
   return true
 }
 
+function validarFecha(valor) {
+  if (!valor) {
+    errores.value.fecha = 'La fecha es obligatoria'
+    return false
+  }
+  const fechaSeleccionada = new Date(valor)
+  if (isNaN(fechaSeleccionada.getDate())) {
+    errores.value.fecha = 'Fecha Invalida'
+    return false
+  }
+  errores.value.fecha = ''
+  return true
+}
+
 async function manejarSubmit() {
   formSubmitted.value = true
 
@@ -99,9 +110,10 @@ async function manejarSubmit() {
   const descripcionValida = validarDescripcion(descripcion.value)
   const montoValido = validarMonto(monto.value)
   const categoriaValida = validarCategoria(categoria_id.value)
+  const fechaValida = validarFecha(fecha.value)
 
   //si hay algun error, no continuar
-  if (!descripcionValida || !montoValido || !categoriaValida) {
+  if (!descripcionValida || !montoValido || !categoriaValida || !fecha) {
     return
   }
 
@@ -112,41 +124,49 @@ async function manejarSubmit() {
       descripcion: descripcion.value.trim(),
       monto: parseFloat(monto.value),
       tipo: tipo.value,
-      categoria_id: categoria_id.value
+      categoria_id: categoria_id.value,
+      fecha: fecha.value
     }
-  
+
     if (props.modoEdicion) {
       movimiento.id = id.value
-      emit('movimimiento-actualizado', movimiento)
+      emit('movimiento-actualizado', movimiento)
     } else {
       emit('nuevo-movimiento', movimiento)
     }
   
-    // Limpiar campos y estados
-    descripcion.value = ''
-    monto.value = ''
-    tipo.value = true
-    categoria_id.value = ''
-    formSubmitted.value = false
-    Object.keys(errores.value).forEach(key => errores.value[key] = '')
-    
+    //Limpiar formulario
+    resetearFormulario()
   } catch (error) {
     console.error('Error al procesar el movimiento: ', error)
   } finally {
-  isLoading.value = false
+    isLoading.value = false
   }
 }
 
+function resetearFormulario() {
+  descripcion.value = ''
+  monto.value = ''
+  tipo.value = true
+  categoria_id.value = ''
+  fecha.value = new Date().toISOString().split('T')[0]
+  formSubmitted.value = false
+  Object.keys(errores.value).forEach(key => errores.value[key] = '')
+}
 </script>
 
 <template>
-  <form @submit.prevent="manejarSubmit" class="formulario">
+  <form @submit.prevent="manejarSubmit" class="formulario" :class="{ 'loading' : isLoading }">
 
     <div class="campo">
-      <input v-model="descripcion" 
+      <label for="descripcion">Descripcion</label>
+      <input 
+        id="descripcion"
+        v-model="descripcion" 
         type="text"
-        placeholder="Descripción"
-        :class="{ 'error': errores.descripcion}"
+        placeholder="Descripción del movimiento"
+        :class="{ 'error': errores.descripcion }"
+        :disabled="isLoading"
       />
       <span class="error-mensaje" v-if="errores.descripcion">
         {{ errores.descripcion }}
@@ -154,50 +174,90 @@ async function manejarSubmit() {
     </div>
 
     <div class="campo">
+      <label for="monto">Monto</label>
       <input
+        id="monto"
         v-model="monto"
         type="number"
-        placeholder="Monto"
+        step="0.01"
+        placeholder="0.00"
         :class="{ 'error': errores.monto }"
+        :disabled="isLoading"
       /> 
       <span class="error-mensaje" v-if="errores.monto">
         {{ errores.monto }}
       </span>
     </div>
 
-    <!--Registrar si es gasto o ingreso-->
+    <div class="campo">
+      <label for="fecha">Fecha</label>
+      <input 
+      id="fecha"
+      v-model="fecha"
+      type="date"
+      :class="{ 'error': errores.fecha }"
+      :disabled="isLoading"
+      >
+      <span class="errores-mensaje" v-if="errores.fecha">
+        {{ errores.fecha }}
+      </span>
+    </div>
+
     <div class="campo-radio">
-      <label>
-        <input type="radio" v-model="tipo" :value="true"> Ingreso
+      <label class="radio-label">
+        <input
+        type="radio"
+        v-model="tipo"
+        :value="true"
+        :disabled="isLoading"
+        >
+        <span class="radio-text ingreso">Ingreso</span> 
       </label>
-      <label>
-        <input type="radio" v-model="tipo" :value="false"> gasto
+      <label class="radio-label">
+        <input 
+        type="radio"
+        v-model="tipo"
+        :value="false"
+        :disabled="isLoading"
+        >
+        <span class="radio-text gasto">Gasto</span>
       </label>    
     </div>
 
     <div class="campo">
-      <select v-model="categoria_id" 
-      :class="{ 'error': errores.categoria_id }">
-        <option disabled value="">Selecciona Categoria </option>
+      <label for="categoria">Categoria</label>
+      <select
+        id="categoria" 
+        v-model="categoria_id" 
+        :class="{ 'error': errores.categoria_id }"
+        :disabled="isLoading"
+        >
+        <option disabled value="">Selecciona Categoria</option>
         <option 
           v-for="cat in props.categorias" 
           :key="cat.id" 
-          :value="cat.id"> {{ cat.nombre }} </option>
+          :value="cat.id"
+          >
+            {{ cat.nombre }} 
+          </option>
       </select>
       <span class="error-mensaje" v-if="errores.categoria_id">
         {{ errores.categoria_id }}
       </span>
     </div>
   
-    <!-- Boton para actualizar o agregar dependiendo del estado del modoEdicion-->
     <button 
       type="submit"
-      :disabled="isLoading"
+      :disabled="isLoading || !formValido"
       class="submit-button"
+      :class="{ 'disabled': !formValido }"
     >
-      <span v-if="isLoading">Procesando...</span>
+      <span v-if="isLoading" class="loading-text">
+        <span class="dots">...</span>
+        Procesando
+      </span>
       <span v-else>
-        {{ props.modoEdicion ? 'Actualizar' : 'Agregar' }} <br/> Movimiento
+        {{ props.modoEdicion ? 'Actualizar' : 'Agregar' }} Movimiento
       </span>
     </button>
   </form>
@@ -207,9 +267,18 @@ async function manejarSubmit() {
 .formulario {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
   max-width: 500px;
   margin: 0 auto;
+  padding: 2rem;
+  background-color: #2c2c2c;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.loading {
+  opacity: 0.7;
+  pointer-events: none;
 }
 
 .campo {
@@ -218,11 +287,25 @@ async function manejarSubmit() {
   gap: 0.5rem;
 }
 
-input, select, button {
-  padding: 0.5rem;
+label {
+  color: #0e0e0e;
+  font-size: 0.9rem;
+}
+
+input, select {
+  padding: 0.75rem;
   font-size: 1rem;
-  border: 1px, solid #ccc;
+  border: 1px solid #444;
+  background-color: #1c1c1c;
+  color: #0e0e0e;
   border-radius: 4px;
+  transition: all 0.2s;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
 .error {
@@ -236,19 +319,77 @@ input, select, button {
 
 .campo-radio {
   display: flex;
-  gap: 1rem;
+  gap: 2rem;
+  padding: 0.5rem 0;
 }
 
-.submit-button {
-  background-color: #0d6efd;
-  color: white;
-  border: none;
-  padding: 0.75rem;
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   cursor: pointer;
 }
 
-.submit-button:disabled {
-  background-color: #6c757d;
+.radio-text {
+  font-size: 1rem;
+}
+
+.ingreso {
+  color: #4CAF50;
+}
+
+.gasto {
+  color: #dc3545;
+}
+
+.error-mensaje {
+  color: #dc3545;
+  font-size: 0.875rem;
+}
+
+
+.submit-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 1rem;
+  font-size: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.submit-button.disabled {
+  background-color: #666;
   cursor: not-allowed;
+}
+
+.loading-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.dots {
+  animation: dots 1.4s infinite;
+}
+
+@keyframes dots {
+  0%, 20% { content: '.'; }
+  40% { content: '..'; }
+  60% { content: '...'; }
+  80%, 100% { content: ''; }
+}
+
+@media (max-width: 768px) {
+  .formulario {
+    padding: 1rem;
+  }
+
+  .campo-radio {
+    flex-direction: column;
+    gap: 1rem;
+  }
 }
 </style>
