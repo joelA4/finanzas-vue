@@ -1,12 +1,12 @@
 import express from 'express'
 import {
     obtenerMovimientos,
-    validarMovimientos,
+    validarMovimiento,
     crearMovimiento,
     actualizarMovimiento,
     eliminarMovimiento
 } from '../controllers/movimientos.controller.js'
-import { autenticar } from '../middleawares/auth.js';
+import { autenticar } from '../middlewares/auth.js';
 
 const router = express.Router()
 

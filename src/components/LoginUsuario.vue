@@ -1,19 +1,19 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useAuth } from '../composables/useAuth'
 
-const { login, error: authError } = useAuth()
+const { iniciarSesion, error: authError, usuario } = useAuth()
 
-const email = ref('')
+const identificador = ref('')
 const password = ref('')
 const isLoading = ref(false)
 const showPassword = ref(false)
 const mensaje = ref({ texto: '', tipo: '' })
 
 const validaciones = computed(() => ({
-    email: {
-        valido: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value),
-        mensaje: 'Ingresa un correo electrónico válido'
+    identificador: {
+        valido: identificador.value.trim().length >= 3,
+        mensaje: 'Ingresa tu email o nombre de usuario'
     },
     password: {
         valido: password.value.length >= 6,
@@ -24,6 +24,21 @@ const validaciones = computed(() => ({
 const formValido = computed(() => 
 Object.values(validaciones.value).every(v => v.valido)
 )
+
+// Observar cambios en el usuario para redirección automática
+watch(usuario, (nuevoUsuario) => {
+    if (nuevoUsuario) {
+        // Usuario autenticado exitosamente
+        mensaje.value = {
+            texto: '¡Inicio de sesión exitoso! Redirigiendo...',
+            tipo: 'success'
+        }
+        // Limpiar el formulario
+        identificador.value = ''
+        password.value = ''
+        isLoading.value = false
+    }
+})
 
 async function handleSubmit() {
     if (!formValido.value) {
@@ -38,10 +53,12 @@ async function handleSubmit() {
     mensaje.value = { texto: '', tipo: '' }
 
     try {
-        await login(email.value, password.value)
-        mensaje.value = {
-            texto: '¡Inicio de sesión exitoso!',
-            tipo: 'success'
+        const resultado = await iniciarSesion({ identificador: identificador.value, password: password.value })
+        if (!resultado) {
+            mensaje.value = {
+                texto: authError.value || 'Error al iniciar sesión',
+                tipo: 'error'
+            }
         }
     } catch (err) {
         mensaje.value = {
@@ -65,21 +82,21 @@ function togglePassword() {
         <form @submit.prevent="handleSubmit" class="login-form">
             <!-- Email -->
             <div class="form-group">
-                <label for="email">Correo Electrónico</label>
+                <label for="identificador">Correo Electrónico o Nombre de Usuario</label>
                 <input 
-                    id="email"
-                    v-model="email"
-                    type="email"
-                    :class="{ 'error': !validaciones.email.valido && email }"
+                    id="identificador"
+                    v-model="identificador"
+                    type="text"
+                    :class="{ 'error': !validaciones.identificador.valido && identificador }"
                     :disabled="isLoading"
-                    autocomplete="email"
-                    placeholder="ejemplo@correo.com" 
+                    autocomplete="username"
+                    placeholder="ejemplo@correo.com o nombre_de_usuario" 
                 />
                 <span
-                    v-if="!validaciones.email.valido && email"
+                    v-if="!validaciones.identificador.valido && identificador"
                     class="error-message"
                 >
-                    {{ validaciones.email.mensaje }}
+                    {{ validaciones.identificador.mensaje }}
                 </span>
             </div>
 

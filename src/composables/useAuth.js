@@ -6,6 +6,13 @@ export function useAuth() {
     const cargando = ref(true)
     const error = ref(null)
 
+    const cerrarSesion = () => {
+        localStorage.removeItem('token')
+        localStorage.removeItem('usuario')
+        usuario.value = null
+        delete axios.defaults.headers.common['Authorization']
+    }
+
     const verificarAuth = async () => {
         const token = localStorage.getItem('token')
         const usuarioGuardado = localStorage.getItem('usuario')
@@ -21,6 +28,32 @@ export function useAuth() {
             }
         }
         cargando.value = false
+    }
+
+    const registrar = async (credenciales) => {
+        try {
+            error.value = null
+            const res = await axios.post('http://localhost:3000/api/auth/registro', credenciales)
+            
+            const { token, usuario: userData } = res.data
+            
+            // Guardar en localStorage
+            localStorage.setItem('token', token)
+            localStorage.setItem('usuario', JSON.stringify(userData))
+            
+            // Actualizar estado
+            usuario.value = userData
+            console.log('Usuario registrado y autenticado en useAuth: ', usuario.value)
+            
+            // Configurar axios
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+            
+            return true
+        } catch (err) {
+            console.error('Error de registro:', err)
+            error.value = err.response?.data?.mensaje || 'Error al registrar usuario'
+            return false
+        }
     }
 
     const iniciarSesion = async (credenciales) => {
@@ -49,13 +82,6 @@ export function useAuth() {
         }
     }
 
-    const cerrarSesion = () => {
-        localStorage.removeItem('token')
-        localStorage.removeItem('usuario')
-        usuario.value = null
-        delete axios.defaults.headers.common['Authorization']
-    }
-
     // Verificar autenticación al inicio
     verificarAuth()
 
@@ -65,6 +91,7 @@ export function useAuth() {
         error,
         iniciarSesion,
         cerrarSesion,
-        verificarAuth
+        verificarAuth,
+        registrar
     }
 }

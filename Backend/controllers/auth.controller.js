@@ -1,5 +1,5 @@
 import { pool } from '../config/db.js'
-import jwt, { JsonWebTokenError } from 'jsonwebtoken'
+import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 
 /**
@@ -16,7 +16,7 @@ const validarDatosUsuario = (datos) => {
         errores.push('El nombre debe tener al menos 2 caracteres')
     }
     if (!datos.email || !emailRegex.test(datos.email)) {
-        errores.push('Email invalido')
+        errores.push('Email inválido')
     }
     if (!datos.nombreusuario || datos.nombreusuario.trim().length < 3) {
         errores.push('El nombre de usuario debe tener al menos 3 caracteres')
@@ -37,7 +37,7 @@ export const registrar = async (req, res) => {
         const errores = validarDatosUsuario({ nombre, email, nombreusuario, password })
         if (errores.length > 0) {
             return res.status(400).json({
-                mensaje: 'Error de validacion',
+                mensaje: 'Error de validación',
                 errores
             })
         }
@@ -55,11 +55,11 @@ export const registrar = async (req, res) => {
 
             if (existente.rows.length > 0) {
                 return res.status(400).json({
-                    mensaje: 'El correo o nombre de usuario ya esta en uso'
+                    mensaje: 'El correo o nombre de usuario ya está en uso'
                 })
             }
 
-            //Encriptar contrasena
+            //Encriptar contraseña
             const saltRounds = 10
             const hashedPassword = await bcrypt.hash(password, saltRounds)
 
@@ -67,7 +67,7 @@ export const registrar = async (req, res) => {
             const nuevo = await client.query(
                 `INSERT INTO usuarios (nombre, email, nombreusuario, password, creado_en)
                 VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
-                RETURNING id, nombre, email, nombreusuario. crceado_en`,
+                RETURNING id, nombre, email, nombreusuario, creado_en`,
                 [nombre, email, nombreusuario, hashedPassword]
             )
 
@@ -123,7 +123,7 @@ export const login = async (req, res) => {
         try {
             // Buscar usuario
             const result = await client.query(
-                'SELECT * FROM usuario WHERE email = $1 OR nombreusuario = $1',
+                'SELECT * FROM usuarios WHERE email = $1 OR nombreusuario = $1',
                 [identificador]
             )
 
@@ -135,7 +135,7 @@ export const login = async (req, res) => {
 
             const usuario = result.rows[0]
 
-            //Verificar contrasena
+            //Verificar contraseña
             const passwordValida = await bcrypt.compare(password, usuario.password)
             if (!passwordValida) {
                 return res.status(401).json({
@@ -153,10 +153,10 @@ export const login = async (req, res) => {
                 { expiresIn: '24h' }
             )
 
-            //Devolver respuesta sin la contrasena
+            //Devolver respuesta sin la contraseña
             const { password: _, ...usuarioSinPassword } = usuario
             res.json({
-                mensaje: 'Inicio de sesion ecitoso',
+                mensaje: 'Inicio de sesión exitoso',
                 token,
                 usuario: usuarioSinPassword
             })
@@ -166,8 +166,8 @@ export const login = async (req, res) => {
     } catch (error) {
         console.error('Error en login:', error)
         res.status(500).json({
-            mensaje: 'Error al iniciar sesion',
-            error: process.env.NODE_ENV == 'development' ? error.menssage : undefined
+            mensaje: 'Error al iniciar sesión',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         })
     }
 }

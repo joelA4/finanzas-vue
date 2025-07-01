@@ -32,7 +32,7 @@ export const obtenerMovimientos = async (req, res) => {
 
 
 //Validacion de datos para movimientos
-const validarMovimiento = (datos) => {
+export const validarMovimiento = (datos) => {
     const errores = []
 
     if ((!datos.descripcion || datos.descripcion.trim().length === 0)) {

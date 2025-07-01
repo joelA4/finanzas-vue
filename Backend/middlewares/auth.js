@@ -13,8 +13,8 @@ export const autenticar = (req, res, next) => {
         }
 
         if (!authHeader.startsWith('Bearer ')) {
-            return res.status(401)({
-                mensaje: 'Formato de token invalido',
+            return res.status(401).json({
+                mensaje: 'Formato de token inválido',
                 error: 'AUTH_INVALID_FORMAT'
             })
         }
@@ -34,7 +34,7 @@ export const autenticar = (req, res, next) => {
             if (!verificado.id || !verificado.nombreusuario) {
                 return res.status(401).json({
                     mensaje: 'Token malformado',
-                error: 'AUTH_TOKEN_MALFORMED'
+                    error: 'AUTH_TOKEN_MALFORMED'
                 })
             }
 
@@ -50,18 +50,17 @@ export const autenticar = (req, res, next) => {
 
             if (error.name === 'JsonWebTokenError') {
                 return res.status(401).json({
-                    mensaje: 'Token invalido',
+                    mensaje: 'Token inválido',
                     error: 'AUTH_TOKEN_INVALID'
                 })
             }
             throw error
         }
     } catch (error) {
-        console.error('Error de autenticacion: ', error)
+        console.error('Error de autenticación: ', error)
         res.status(500).json({
-            mensaje: 'Error interno del sevidor',
+            mensaje: 'Error interno del servidor',
             error: 'AUTH_SERVER_ERROR'
         })
     }
-}
-    
+} 

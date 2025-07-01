@@ -5,7 +5,7 @@ import {
     updateCategoria,
     deleteCategoria 
     } from "../controllers/categorias.controller.js";
-import { autenticar } from '../middleawares/auth.js'
+import { autenticar } from '../middlewares/auth.js'
 
 const router = express.Router()
 // Todas las rutas requieren autenticacion

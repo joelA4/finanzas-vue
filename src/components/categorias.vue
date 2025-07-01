@@ -1,8 +1,6 @@
 <script setup> 
 import { ref, computed } from 'vue'
 import { useCategorias  } from '../composables/useCategorias.js';
-import { ESModulesEvaluator } from 'vite/module-runner';
-import { eliminarMovimiento } from '../../Backend/controllers/movimientos.controller.js';
 
 const {
     categorias,
@@ -111,7 +109,6 @@ async function handleEliminar() {
         }, 3000)
     }
 }
-
 </script>
 
 <template>
@@ -127,7 +124,7 @@ async function handleEliminar() {
                     :placeholder="modoEdicion ? 'editar categoria' : 'Nueva Categoria'"
                     :disabled="isLoading"
                     class="categoria-input"
-                    :class="{ 'error': !categoriaValidar && nombreCategoria}"
+                    :class="{ 'error': !categoriaValida && nombreCategoria}"
                 >
                 <div class="form-buttons">
                     <button
@@ -184,7 +181,7 @@ async function handleEliminar() {
         </ul>
 
         <!-- Modal de confirmacion -->
-         <div v-if="mostrarConfirmacion" class="modal-overloay">
+         <div v-if="mostrarConfirmacion" class="modal-overlay">
             <div class="modal-content">
                 <h4>Confirmar Eliminación</h4>
                 <p>

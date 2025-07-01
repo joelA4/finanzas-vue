@@ -4,7 +4,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 const { Pool } = pkg
 
-//Validacion de variables de entorno requeridas
+//Validación de variables de entorno requeridas
 const requiredEnvVars = ['DB_USER', 'DB_HOST', 'DB_PASSWORD', 'DB_DATABASE', 'DB_PORT']
 const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName])
 
@@ -20,17 +20,17 @@ const dbPool = new Pool({
     port: process.env.DB_PORT
 })
 
-// Prueba de conexion inicial
+// Prueba de conexión inicial
 dbPool.connect((err, client, release) =>{
     if (err) {
         console.error('Error al conectar con la base de datos:', err.stack )
     } else {
-        console.log('Conexion exitosa con la base de datos')
+        console.log('Conexión exitosa con la base de datos')
         release()
     }
 })
 
-//manejo de errores de la pool
+//Manejo de errores de la pool
 dbPool.on('error', (err) =>{
     console.error('Error inesperado en el pool de conexiones: ', err)
 })

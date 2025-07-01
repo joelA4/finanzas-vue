@@ -7,12 +7,15 @@ import { useAuth } from './composables/useAuth'
 
 const { usuario, cargando, error, cerrarSesion, verificarAuth } = useAuth()
 
+const mensajeError = ref('')
+const mostrarError = ref(false)
+
 // Verificar autenticacion al montar componentes
 onMounted(async () => {
   try {
     await verificarAuth()
   } catch (erro) {
-    mensajeError.value = 'Error al verificar la autentificacion'
+    mensajeError.value = 'Error al verificar la autenticación'
     mostrarError.value = true
   }
 })
@@ -28,7 +31,7 @@ watch(error, (nuevoError) => {
     setTimeout(() => {
       mostrarError.value = false
       mensajeError.value = ''
-    }), 500
+    }, 500)
   }
 })
 
@@ -36,15 +39,15 @@ async function handleCerrarSesion() {
   try {
     await cerrarSesion()
   } catch (err) {
-    mensajeError.value = 'Error al iniciar sesion'
-    mostrarError.value = error
+    mensajeError.value = 'Error al cerrar sesión'
+    mostrarError.value = true
   }
 }
 </script>
 
 <template>
   <div class="app-container">
-    <!-- Mensaje se error global -->
+    <!-- Mensaje de error global -->
   <div v-if="mostrarError" class="error-mensaje">
     {{ mensajeError }}
     <button @click="mostrarError = false" class="cerrar-error" >&times;</button>
@@ -110,7 +113,7 @@ async function handleCerrarSesion() {
     opacity: 0;
   }
   to {
-    transform: rotateX(0);
+    transform: translateX(0);
     opacity: 1;
   }
 }

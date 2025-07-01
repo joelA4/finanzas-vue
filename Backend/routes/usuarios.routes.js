@@ -4,7 +4,7 @@ import {
     obtenerPerfil,
     actualizarPerfil
 } from '../controllers/usuarios.controller.js'
-import { autenticar } from '../middleawares/auth.js'
+import { autenticar } from '../middlewares/auth.js'
 
 const router = express.Router()
 
